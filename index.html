@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社員ディレクトリ & 表彰ランキング</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .view-transition {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .dept-card, .award-card {
+            transition: all 0.3s ease;
+        }
+
+        .dept-card:hover, .award-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .admin-only {
+            display: none;
+        }
+
+        body.is-admin .admin-only {
+            display: flex;
+        }
+
+        .avatar-img {
+            object-fit: cover;
+        }
+
+        .tab-active {
+            border-bottom: 3px solid #3b82f6;
+            color: #3b82f6;
+        }
+
+        /* Award Specific Styles */
+        .award-mvp-sales { border-top: 4px solid #fbbf24; }
+        .award-mvp-promo { border-top: 4px solid #34d399; }
+        .award-thanks { border-top: 4px solid #f87171; }
+        .award-special { border-top: 4px solid #60a5fa; }
+        .award-sapporo { border-top: 4px solid #a78bfa; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white pt-10 px-4 shadow-lg relative">
+        <div class="max-w-6xl mx-auto text-center">
+            <div class="absolute top-4 right-4">
+                <button id="adminLoginBtn" class="text-xs bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full transition border border-slate-700">
+                    <i class="fas fa-lock mr-2"></i> <span id="loginText">管理者ログイン</span>
+                </button>
+            </div>
+            
+            <h1 class="text-3xl font-bold tracking-tight cursor-pointer mb-6" onclick="showMainTab('directory')">
+                <i class="fas fa-sitemap mr-3 text-blue-400"></i> 社内ポータルサイト
+            </h1>
+
+            <!-- Main Tabs -->
+            <nav class="flex justify-center space-x-8">
+                <button onclick="showMainTab('directory')" id="tabDir" class="pb-3 px-2 font-bold transition-all tab-active">
+                    <i class="fas fa-address-book mr-2"></i>メンバー紹介
+                </button>
+                <button onclick="showMainTab('awards')" id="tabAwd" class="pb-3 px-2 font-bold transition-all text-slate-400 hover:text-white">
+                    <i class="fas fa-trophy mr-2"></i>表彰ランキング
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-12">
+        
+        <!-- ================= DIRECTORY SECTION ================= -->
+        <div id="directorySection">
+            <!-- View 1: Department Selection (Home) -->
+            <section id="homeView" class="view-transition">
+                <div class="text-center mb-12">
+                    <h2 class="text-2xl font-bold text-slate-700">事業部を選択</h2>
+                    <p class="text-slate-400">紹介を見たい部署をクリックしてください</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- 営業 -->
+                    <div onclick="showDepartment('営業')" class="dept-card bg-white rounded-3xl p-8 border border-slate-200 text-center cursor-pointer shadow-sm">
+                        <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2">営業</h3>
+                        <p class="text-slate-500 text-sm">Sales Division</p>
+                    </div>
+                    <!-- BY -->
+                    <div onclick="showDepartment('BY')" class="dept-card bg-white rounded-3xl p-8 border border-slate-200 text-center cursor-pointer shadow-sm">
+                        <div class="w-20 h-20 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2">BY</h3>
+                        <p class="text-slate-500 text-sm">Buying Division</p>
+                    </div>
+                    <!-- 推進 -->
+                    <div onclick="showDepartment('推進')" class="dept-card bg-white rounded-3xl p-8 border border-slate-200 text-center cursor-pointer shadow-sm">
+                        <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2">推進</h3>
+                        <p class="text-slate-500 text-sm">Promotion Division</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View 2: Member List -->
+            <section id="memberListView" class="hidden view-transition">
+                <div class="flex flex-wrap justify-between items-center mb-8 gap-4">
+                    <div class="flex items-center">
+                        <button onclick="showView('home')" class="mr-4 text-slate-400 hover:text-slate-600">
+                            <i class="fas fa-chevron-left text-xl"></i>
+                        </button>
+                        <div>
+                            <h2 id="currentDeptTitle" class="text-2xl font-bold text-slate-800">事業部名</h2>
+                            <p class="text-sm text-slate-500 font-medium">メンバー一覧</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="relative">
+                            <input type="text" id="memberSearchInput" placeholder="名前で検索..." class="pl-10 pr-4 py-2 border border-slate-200 rounded-full text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-search absolute left-4 top-3 text-slate-400 text-xs"></i>
+                        </div>
+                        <button id="openModalBtn" class="admin-only bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-bold transition shadow-md">
+                            追加
+                        </button>
+                    </div>
+                </div>
+                <div id="memberGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Member cards injected here -->
+                </div>
+            </section>
+
+            <!-- View 3: Member Detail -->
+            <section id="memberDetailView" class="hidden view-transition">
+                <button onclick="goBackToMembers()" class="mb-8 flex items-center text-slate-500 hover:text-blue-600 font-medium transition group">
+                    <i class="fas fa-arrow-left mr-2 transition-transform group-hover:-translate-x-1"></i> 一覧に戻る
+                </button>
+                
+                <div class="bg-white rounded-3xl shadow-xl overflow-hidden max-w-4xl mx-auto border border-slate-100">
+                    <div class="h-32 bg-slate-100 border-b border-slate-50"></div>
+                    <div class="px-10 pb-12">
+                        <div class="flex flex-col md:flex-row items-start md:items-end -mt-16 mb-8 gap-8">
+                            <div id="detailPhotoContainer" class="w-40 h-40 rounded-3xl bg-blue-600 text-white flex items-center justify-center text-6xl font-bold border-8 border-white shadow-xl overflow-hidden">
+                                <!-- Image or Initials -->
+                            </div>
+                            <div class="pb-2">
+                                <h2 id="detailName" class="text-4xl font-black text-slate-800 mb-2">氏名</h2>
+                                <div class="flex gap-2">
+                                    <span id="detailDept" class="bg-slate-100 text-slate-600 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">事業部</span>
+                                    <span id="detailPos" class="bg-blue-50 text-blue-600 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">役職</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                            <div class="md:col-span-2 space-y-10">
+                                <section>
+                                    <h3 class="text-lg font-bold text-slate-800 flex items-center mb-4">
+                                        <i class="fas fa-star text-yellow-400 mr-3"></i> 趣味・特技
+                                    </h3>
+                                    <div class="bg-slate-50 rounded-2xl p-8 text-slate-700 leading-relaxed text-lg border border-slate-100">
+                                        <p id="detailHobbies">趣味の詳細がここに表示されます。</p>
+                                    </div>
+                                </section>
+                            </div>
+                            <div class="space-y-6">
+                                <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 text-center">
+                                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Actions</h4>
+                                    <div class="admin-only flex flex-col gap-2">
+                                        <button id="deleteBtn" class="w-full py-2 text-red-500 hover:bg-red-50 rounded-lg text-sm font-bold transition">削除する</button>
+                                    </div>
+                                    <div class="text-[10px] text-slate-300 mt-4">Employee System v2.0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= AWARDS SECTION ================= -->
+        <div id="awardsSection" class="hidden view-transition">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">Quarterly Awards</h2>
+                <p class="text-slate-500 mb-8">各クオーターで最も輝いたメンバーを表彰します</p>
+                
+                <!-- Quarter Selector -->
+                <div class="inline-flex bg-white p-1 rounded-xl shadow-sm border border-slate-200">
+                    <button onclick="changeAwardQuarter('2024 1Q')" class="q-btn px-6 py-2 rounded-lg text-sm font-bold transition-all bg-slate-900 text-white" data-q="2024 1Q">2024 1Q</button>
+                    <button onclick="changeAwardQuarter('2023 4Q')" class="q-btn px-6 py-2 rounded-lg text-sm font-bold transition-all text-slate-500 hover:bg-slate-50" data-q="2023 4Q">2023 4Q</button>
+                </div>
+            </div>
+
+            <div id="awardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Award cards injected here -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Add Member -->
+    <div id="modal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="text-xl font-bold">メンバー登録</h3>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="profileForm" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">お名前</label>
+                    <input type="text" name="name" required class="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">事業部</label>
+                        <select name="department" required class="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="営業">営業</option>
+                            <option value="BY">BY</option>
+                            <option value="推進">推進</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">役職</label>
+                        <input type="text" name="position" required class="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">写真URL (任意)</label>
+                    <input type="url" name="imageUrl" placeholder="https://example.com/photo.jpg" class="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">趣味</label>
+                    <textarea name="hobbies" required rows="3" class="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-slate-800 transition">登録する</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl text-center">
+            <h3 class="text-xl font-bold mb-6">管理者認証</h3>
+            <input type="password" id="adminPasswordInput" placeholder="パスワードを入力" class="w-full border border-slate-200 rounded-xl p-4 mb-4 outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="flex gap-3">
+                <button id="cancelLoginBtn" class="flex-1 py-3 text-slate-500 font-bold">キャンセル</button>
+                <button id="submitLoginBtn" class="flex-1 bg-blue-600 text-white rounded-xl font-bold">ログイン</button>
+            </div>
+            <p class="mt-4 text-[10px] text-slate-300">Password: admin123</p>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-8 right-8 bg-slate-800 text-white px-6 py-3 rounded-xl shadow-xl transform translate-y-20 opacity-0 transition duration-300 z-50">
+        Message
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. 従業員データ管理セクション
+        // ==========================================
+        let employees = [
+            { 
+                id: 1, 
+                name: "田島 杏名", 
+                department: "BY", 
+                position: "一般社員", 
+                hobbies: "ライブ", 
+                imageUrl: "" 
+            },
+            { 
+                id: 2, 
+                name: "田中 真弓", 
+                department: "営業", 
+                position: "Mgr", 
+                hobbies: "サウナ", 
+                imageUrl: "mojojo.png" // 更新: 新しいアイコン写真 mojojo.png を設定
+            },
+            { 
+                id: 3, 
+                name: "小野 優祐", 
+                department: "推進", 
+                position: "部長", 
+                hobbies: "料理", 
+                imageUrl: "" 
+            }
+        ];
+
+        // ==========================================
+        // 2. 表彰データ管理セクション
+        // ==========================================
+        let awardsData = {
+            '2024 1Q': [
+                { type: '営業部MVP', winner: '田中 真弓', comment: '営業部Mgrとしてのリーダーシップと目標達成への熱意を称えます。', class: 'award-mvp-sales', icon: 'fa-chart-line' },
+                { type: '推進MVP', winner: '小野 優祐', comment: '部長として推進プロジェクトを成功に導き、他部署との連携を強化しました。', class: 'award-mvp-promo', icon: 'fa-rocket' },
+                { type: '感謝賞', winner: '田島 杏名', comment: 'BYチームを支える細やかな配慮とライブで培ったパワーに感謝。', class: 'award-thanks', icon: 'fa-hands-helping' },
+                { type: '特別賞', winner: '未設定', comment: '該当者なし', class: 'award-special', icon: 'fa-lightbulb' },
+                { type: '札幌賞', winner: '未設定', comment: '該当者なし', class: 'award-sapporo', icon: 'fa-snowflake' }
+            ],
+            '2023 4Q': []
+        };
+
+        // ==========================================
+        // 3. アプリケーションロジック (変更不要)
+        // ==========================================
+        let isAdmin = false;
+        let activeMainTab = 'directory';
+        let currentView = 'home';
+        let currentDept = '';
+        let currentAwardQ = '2024 1Q';
+
+        const ADMIN_PASSWORD = "admin123";
+
+        function showMainTab(tab) {
+            activeMainTab = tab;
+            const dirSection = document.getElementById('directorySection');
+            const awdSection = document.getElementById('awardsSection');
+            const tabDir = document.getElementById('tabDir');
+            const tabAwd = document.getElementById('tabAwd');
+
+            if (tab === 'directory') {
+                dirSection.classList.remove('hidden');
+                awdSection.classList.add('hidden');
+                tabDir.classList.add('tab-active');
+                tabDir.classList.remove('text-slate-400');
+                tabAwd.classList.remove('tab-active');
+                tabAwd.classList.add('text-slate-400');
+                showView('home');
+            } else {
+                dirSection.classList.add('hidden');
+                awdSection.classList.remove('hidden');
+                tabAwd.classList.add('tab-active');
+                tabAwd.classList.remove('text-slate-400');
+                tabDir.classList.remove('tab-active');
+                tabDir.classList.add('text-slate-400');
+                renderAwards();
+            }
+        }
+
+        function showView(viewId) {
+            currentView = viewId;
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('memberListView').classList.add('hidden');
+            document.getElementById('memberDetailView').classList.add('hidden');
+            
+            document.getElementById(viewId + 'View').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showDepartment(deptName) {
+            currentDept = deptName;
+            document.getElementById('currentDeptTitle').textContent = deptName + '事業部';
+            renderMembers();
+            showView('memberList');
+        }
+
+        function goBackToMembers() {
+            showView('memberList');
+        }
+
+        function changeAwardQuarter(q) {
+            currentAwardQ = q;
+            document.querySelectorAll('.q-btn').forEach(btn => {
+                if (btn.dataset.q === q) {
+                    btn.classList.add('bg-slate-900', 'text-white');
+                    btn.classList.remove('text-slate-500', 'hover:bg-slate-50');
+                } else {
+                    btn.classList.remove('bg-slate-900', 'text-white');
+                    btn.classList.add('text-slate-500', 'hover:bg-slate-50');
+                }
+            });
+            renderAwards();
+        }
+
+        function renderAwards() {
+            const grid = document.getElementById('awardsGrid');
+            const awards = awardsData[currentAwardQ] || [];
+            grid.innerHTML = '';
+
+            awards.forEach(awd => {
+                const card = document.createElement('div');
+                card.className = `award-card bg-white rounded-2xl p-8 shadow-sm border border-slate-100 ${awd.class} relative overflow-hidden`;
+                card.innerHTML = `
+                    <div class="absolute -right-4 -top-4 text-slate-50 opacity-10 text-8xl">
+                        <i class="fas ${awd.icon}"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex items-center mb-4">
+                            <span class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mr-3">
+                                <i class="fas ${awd.icon}"></i>
+                            </span>
+                            <h4 class="font-black text-slate-400 text-xs uppercase tracking-widest">${awd.type}</h4>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-3">${awd.winner}</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">${awd.comment}</p>
+                    </div>
+                    <div class="mt-6 flex justify-between items-center text-[10px] font-bold text-slate-300">
+                        <span>EST. 2024</span>
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderMembers() {
+            const grid = document.getElementById('memberGrid');
+            const term = document.getElementById('memberSearchInput').value.toLowerCase();
+            
+            const filtered = employees.filter(emp => 
+                emp.department === currentDept && 
+                emp.name.toLowerCase().includes(term)
+            );
+
+            grid.innerHTML = '';
+            filtered.forEach(emp => {
+                const card = document.createElement('div');
+                card.className = 'profile-card bg-white rounded-3xl p-6 border border-slate-100 flex flex-col h-full shadow-sm cursor-pointer hover:shadow-md transition-all';
+                card.onclick = () => showMemberDetail(emp.id);
+                
+                const avatarContent = emp.imageUrl 
+                    ? `<img src="${emp.imageUrl}" class="avatar-img w-full h-full" onerror="this.parentElement.innerHTML='${emp.name.charAt(0)}'">`
+                    : emp.name.charAt(0);
+
+                card.innerHTML = `
+                    <div class="flex items-center mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-2xl mr-4 border border-slate-50 overflow-hidden">
+                            ${avatarContent}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-800">${emp.name}</h3>
+                            <p class="text-xs text-blue-500 font-bold tracking-wider">${emp.position}</p>
+                        </div>
+                    </div>
+                    <p class="text-slate-500 text-sm line-clamp-2 italic leading-relaxed flex-grow">"${emp.hobbies}"</p>
+                    <div class="mt-4 flex justify-end">
+                        <i class="fas fa-chevron-right text-slate-200"></i>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function showMemberDetail(id) {
+            const emp = employees.find(e => e.id === id);
+            if (!emp) return;
+
+            document.getElementById('detailName').textContent = emp.name;
+            document.getElementById('detailDept').textContent = emp.department;
+            document.getElementById('detailPos').textContent = emp.position;
+            document.getElementById('detailHobbies').textContent = emp.hobbies;
+
+            const container = document.getElementById('detailPhotoContainer');
+            if (emp.imageUrl) {
+                container.innerHTML = `<img src="${emp.imageUrl}" class="avatar-img w-full h-full" onerror="this.parentElement.innerHTML='${emp.name.charAt(0)}'">`;
+            } else {
+                container.innerHTML = emp.name.charAt(0);
+            }
+
+            document.getElementById('deleteBtn').onclick = () => {
+                if(confirm('このメンバーを削除しますか？')) {
+                    employees = employees.filter(e => e.id !== id);
+                    showToast('削除しました');
+                    showDepartment(currentDept);
+                }
+            };
+
+            showView('memberDetail');
+        }
+
+        function toggleAdminMode(loggedIn) {
+            isAdmin = loggedIn;
+            if (isAdmin) {
+                document.body.classList.add('is-admin');
+                document.getElementById('loginText').textContent = 'ログアウト';
+                showToast('管理者モード有効');
+            } else {
+                document.body.classList.remove('is-admin');
+                document.getElementById('loginText').textContent = '管理者ログイン';
+                showToast('ログアウトしました');
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        document.getElementById('adminLoginBtn').onclick = () => {
+            if (isAdmin) toggleAdminMode(false);
+            else document.getElementById('loginModal').classList.remove('hidden');
+        };
+
+        document.getElementById('submitLoginBtn').onclick = () => {
+            const pwd = document.getElementById('adminPasswordInput').value;
+            if (pwd === ADMIN_PASSWORD) {
+                toggleAdminMode(true);
+                document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('adminPasswordInput').value = '';
+            } else { alert('パスワードが違います'); }
+        };
+
+        document.getElementById('cancelLoginBtn').onclick = () => document.getElementById('loginModal').classList.add('hidden');
+        document.getElementById('openModalBtn').onclick = () => document.getElementById('modal').classList.remove('hidden');
+        document.getElementById('closeModalBtn').onclick = () => document.getElementById('modal').classList.add('hidden');
+        document.getElementById('memberSearchInput').oninput = renderMembers;
+
+        document.getElementById('profileForm').onsubmit = (e) => {
+            e.preventDefault();
+            const f = new FormData(e.target);
+            employees.push({
+                id: Date.now(),
+                name: f.get('name'),
+                department: f.get('department'),
+                position: f.get('position'),
+                hobbies: f.get('hobbies'),
+                imageUrl: f.get('imageUrl')
+            });
+            renderMembers();
+            e.target.reset();
+            document.getElementById('modal').classList.add('hidden');
+            showToast('追加しました！');
+        };
+
+        window.onload = () => showMainTab('directory');
+    </script>
+</body>
+</html>
